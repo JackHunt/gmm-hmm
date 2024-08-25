@@ -78,4 +78,6 @@ void MultivariateNormal<D>::set_sigma(const Matrix<D, D>& sigma) {
   this->sigma = sigma;
 }
 
+namespace ContinuousHMM::ProbUtils {
 template class MultivariateNormal<3>;
+}
