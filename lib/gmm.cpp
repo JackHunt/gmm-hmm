@@ -200,4 +200,6 @@ constexpr size_t GaussianMixtureModel<D, M>::get_data_dimension() const {
   return D;
 }
 
+namespace ContinuousHMM::GMM {
 template class GaussianMixtureModel<3, 4>;
+}
