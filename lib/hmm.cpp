@@ -30,7 +30,7 @@ HiddenMarkovModel<K, M, D>::HiddenMarkovModel(
   // t=0.
   emission_vectors.front() = get_emission_vector(observations.front());
   observation_prob.front() =
-      initial_state_prob.cwiseProduct(emission_vectors.front());
+      log_sum_exp<K>(initial_state_prob, emission_vectors.front());
   scale_factors.front() = 1.0 / observation_prob.front().sum();
 
   // Scale observation probabilities (alpha) for t=0.
@@ -53,7 +53,7 @@ void HiddenMarkovModel<K, M, D>::forward() {
     // Compute alpha.
     const auto p =
         state_transition_prob.transpose() * observation_prob.at(i - 1);
-    const auto alpha = p.cwiseProduct(emission_vectors.at(i));
+    const auto alpha = log_sum_exp<K>(p, emission_vectors.at(i));
 
     // Compute scale factor.
     auto eps = [](double a) -> bool {
@@ -76,7 +76,7 @@ template <size_t K, size_t M, size_t D>
 void HiddenMarkovModel<K, M, D>::backward() {
   for (int i = (observations.size() - 2); i >= 0; i--) {
     const auto p =
-        emission_vectors.at(i + 1).cwiseProduct(sequence_probs.at(i + 1));
+        log_sum_exp<K>(emission_vectors.at(i + 1), sequence_probs.at(i + 1));
     const auto beta = state_transition_prob.transpose() * p;
     sequence_probs.at(i) = beta * scale_factors.at(i);
   }
@@ -169,7 +169,8 @@ MatrixList<K, K> HiddenMarkovModel<K, M, D>::compute_zetas() const {
   zetas.reserve(observations.size());
   for (size_t i = 0; i < observations.size(); i++) {
     const auto tmp =
-        (emission_vectors.at(i).cwiseProduct(sequence_probs.at(i))).transpose();
+        log_sum_exp<K>(emission_vectors.at(i), sequence_probs.at(i))
+            .transpose();
     const auto p = observation_prob.at(i) * tmp;
     zetas.push_back(state_transition_prob.cwiseProduct(p) / Z);
   }
@@ -192,7 +193,7 @@ MatrixList<K, M> HiddenMarkovModel<K, M, D>::compute_gammas() const {
   for (size_t t = 0; t < observations.size(); t++) {
     const auto& x = observations.at(t);
 
-    auto w = (observation_prob.at(t).cwiseProduct(sequence_probs.at(t))).eval();
+    auto w = log_sum_exp<K>(observation_prob.at(t), sequence_probs.at(t));
     w /= w.sum();
 
     Matrix<K, M> gamma(K, M);
@@ -409,7 +410,7 @@ HiddenMarkovModel<K, M, D>::get_state_sequence() {
 
   // Initial state.
   delta.push_back(
-      observation_prob.front().cwiseProduct(emission_vectors.front()));
+      log_sum_exp<K>(observation_prob.front(), emission_vectors.front()));
   psi.push_back(0);
 
   // Compute the Viterbi Path; the most likely state sequence.

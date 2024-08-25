@@ -16,6 +16,14 @@ namespace ContinuousHMM {
 
 using GMM::GaussianMixtureModel;
 
+template <size_t K>
+Vector<K> log_sum_exp(const Vector<K>& a, const Vector<K>& b) {
+  const auto log_a = a.array().log();
+  const auto log_b = b.array().log();
+  const auto log_sum = (log_a + log_b).exp();
+  return log_sum.matrix();
+}
+
 /*!
  * This class implements a Hidden Markov Model with continuous
  * observations modelled by an $M$ dimensional Gaussian Mixture Model.
