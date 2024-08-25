@@ -12,7 +12,7 @@
 #include "aliases.hpp"
 #include "gmm.hpp"
 
-namespace ContinuousHMM::HMM {
+namespace ContinuousHMM {
 
 using GMM::GaussianMixtureModel;
 
@@ -77,9 +77,9 @@ class HiddenMarkovModel final {
 
   void train(unsigned int epochs, double convergence_threshold);
 
-  std::pair<std::vector<size_t>, VectorList<K>> get_state_sequences();
+  std::pair<std::vector<size_t>, VectorList<K>> get_state_sequence();
 };
 
-}  // namespace ContinuousHMM::HMM
+}  // namespace ContinuousHMM
 
 #endif
