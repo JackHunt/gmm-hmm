@@ -59,12 +59,12 @@ void HiddenMarkovModel<K, M, D>::forward() {
     auto eps = [](double a) -> bool {
       return std::abs(a) < std::numeric_limits<double>::epsilon();
     };
-    const auto alphaSum = alpha.sum();
-    const auto scaleFactor = eps(alphaSum) ? 1.0 : 1.0 / alpha.sum();
+    const auto alpha_sum = alpha.sum();
+    const auto scale_factor = eps(alpha_sum) ? 1.0 : 1.0 / alpha.sum();
 
     // Update.
-    observation_prob.at(i) = alpha * scaleFactor;
-    scale_factors.at(i) = scaleFactor;
+    observation_prob.at(i) = alpha * scale_factor;
+    scale_factors.at(i) = scale_factor;
   }
 }
 
