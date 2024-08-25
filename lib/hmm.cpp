@@ -60,7 +60,7 @@ void ContinuousInputHMM<K, M, D>::forward() {
       return std::abs(a) < std::numeric_limits<double>::epsilon();
     };
     const auto alpha_sum = alpha.sum();
-    const auto scale_factor = eps(alpha_sum) ? 1.0 : 1.0 / alpha.sum();
+    const auto scale_factor = eps(alpha_sum) ? 1.0 : 1.0 / alpha_sum;
 
     // Update.
     observation_prob.at(i) = alpha * scale_factor;
@@ -77,7 +77,8 @@ void ContinuousInputHMM<K, M, D>::backward() {
   for (int i = (observations.size() - 2); i >= 0; i--) {
     const auto p = log_sum_exp<Vector<K>>(emission_vectors.at(i + 1),
                                           sequence_probs.at(i + 1));
-    const auto beta = state_transition_prob.transpose() * p;
+    const auto beta =
+        log_sum_exp_matmul<K, K, 1>(state_transition_prob.transpose(), p);
     sequence_probs.at(i) = beta * scale_factors.at(i);
   }
 }
@@ -171,7 +172,7 @@ MatrixList<K, K> ContinuousInputHMM<K, M, D>::compute_zetas() const {
     const auto tmp =
         log_sum_exp<Vector<K>>(emission_vectors.at(i), sequence_probs.at(i))
             .transpose();
-    const auto p = observation_prob.at(i) * tmp;
+    const auto p = log_sum_exp_matmul<K, 1, K>(observation_prob.at(i), tmp);
     zetas.push_back(log_sum_exp<Matrix<K, K>>(state_transition_prob, p) / Z);
   }
 
@@ -204,7 +205,9 @@ MatrixList<K, M> ContinuousInputHMM<K, M, D>::compute_gammas() const {
       const auto prob = p(x);
       for (size_t m = 0; m < M; m++) {
         gamma(k, m) = p(x, m) / prob;
-        gamma.row(k) *= w(k);
+
+        const auto log_gamma_row = gamma.row(k).array().log();
+        gamma.row(k) = (log_gamma_row + std::log(w(k))).exp();
       }
     }
     gammas.push_back(gamma);
@@ -416,7 +419,8 @@ ContinuousInputHMM<K, M, D>::get_state_sequence() {
 
   // Compute the Viterbi Path; the most likely state sequence.
   for (size_t t = 1; t < observations.size(); t++) {
-    const auto trans_prob = delta.at(t - 1).transpose() * state_transition_prob;
+    const auto trans_prob = log_sum_exp_matmul<1, K, K>(
+        delta.at(t - 1).transpose(), state_transition_prob);
 
     typename Vector<K>::Index max_idx;
     delta.push_back(trans_prob.maxCoeff(&max_idx) * emission_vectors.at(t));
