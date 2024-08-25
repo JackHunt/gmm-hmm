@@ -30,13 +30,15 @@ set(LIB_SOURCES
 add_library(continuous_hmm ${LIB_HEADERS} ${LIB_SOURCES})
 target_link_libraries(continuous_hmm Eigen3::Eigen)
 
-#set(HEADERS
-#  main.hpp
-#)
+set(HEADERS
+  demo/MotionData.hpp
+  demo/main.hpp
+)
 
-#set(SOURCES
-#  main.cpp
-#)
+set(SOURCES
+  demo/MotionData.cpp
+  demo/main.cpp
+)
 
-#add_executable(demo ${HEADERS} ${SOURCES})
-#target_link_libraries(demo gmm_hmm)
+add_executable(demo ${HEADERS} ${SOURCES})
+target_link_libraries(demo continuous_hmm)
