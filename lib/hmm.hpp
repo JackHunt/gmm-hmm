@@ -16,8 +16,8 @@ namespace ContinuousHMM {
 
 using GMM::GaussianMixtureModel;
 
-template <size_t K>
-Vector<K> log_sum_exp(const Vector<K>& a, const Vector<K>& b) {
+template <typename T>
+T log_sum_exp(const T& a, const T& b) {
   const auto log_a = a.array().log();
   const auto log_b = b.array().log();
   const auto log_sum = (log_a + log_b).exp();

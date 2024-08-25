@@ -30,7 +30,7 @@ HiddenMarkovModel<K, M, D>::HiddenMarkovModel(
   // t=0.
   emission_vectors.front() = get_emission_vector(observations.front());
   observation_prob.front() =
-      log_sum_exp<K>(initial_state_prob, emission_vectors.front());
+      log_sum_exp<Vector<K>>(initial_state_prob, emission_vectors.front());
   scale_factors.front() = 1.0 / observation_prob.front().sum();
 
   // Scale observation probabilities (alpha) for t=0.
@@ -53,7 +53,7 @@ void HiddenMarkovModel<K, M, D>::forward() {
     // Compute alpha.
     const auto p =
         state_transition_prob.transpose() * observation_prob.at(i - 1);
-    const auto alpha = log_sum_exp<K>(p, emission_vectors.at(i));
+    const auto alpha = log_sum_exp<Vector<K>>(p, emission_vectors.at(i));
 
     // Compute scale factor.
     auto eps = [](double a) -> bool {
@@ -75,8 +75,8 @@ void HiddenMarkovModel<K, M, D>::forward() {
 template <size_t K, size_t M, size_t D>
 void HiddenMarkovModel<K, M, D>::backward() {
   for (int i = (observations.size() - 2); i >= 0; i--) {
-    const auto p =
-        log_sum_exp<K>(emission_vectors.at(i + 1), sequence_probs.at(i + 1));
+    const auto p = log_sum_exp<Vector<K>>(emission_vectors.at(i + 1),
+                                          sequence_probs.at(i + 1));
     const auto beta = state_transition_prob.transpose() * p;
     sequence_probs.at(i) = beta * scale_factors.at(i);
   }
@@ -104,7 +104,7 @@ void HiddenMarkovModel<K, M, D>::update() {
                  std::back_inserter(gamma_row_sums),
                  [](const auto& gamma) { return gamma.rowwise().sum(); });
 
-  const auto gammaRowSumT = std::accumulate(
+  const auto gamma_row_sum_t = std::accumulate(
       gamma_row_sums.cbegin(), gamma_row_sums.cend(), Vector<K>::Zero().eval());
 
   /*
@@ -116,7 +116,7 @@ void HiddenMarkovModel<K, M, D>::update() {
                                        Matrix<K, K>::Zero().eval());
   // Normalise. TODO: Vectorise this.
   for (size_t k = 0; k < K; k++) {
-    expectation_A.row(k) /= gammaRowSumT(k);
+    expectation_A.row(k) /= gamma_row_sum_t(k);
     expectation_A.row(k).normalize();
   }
   state_transition_prob = expectation_A;
@@ -169,10 +169,10 @@ MatrixList<K, K> HiddenMarkovModel<K, M, D>::compute_zetas() const {
   zetas.reserve(observations.size());
   for (size_t i = 0; i < observations.size(); i++) {
     const auto tmp =
-        log_sum_exp<K>(emission_vectors.at(i), sequence_probs.at(i))
+        log_sum_exp<Vector<K>>(emission_vectors.at(i), sequence_probs.at(i))
             .transpose();
     const auto p = observation_prob.at(i) * tmp;
-    zetas.push_back(state_transition_prob.cwiseProduct(p) / Z);
+    zetas.push_back(log_sum_exp<Matrix<K, K>>(state_transition_prob, p) / Z);
   }
 
   return zetas;
@@ -193,7 +193,8 @@ MatrixList<K, M> HiddenMarkovModel<K, M, D>::compute_gammas() const {
   for (size_t t = 0; t < observations.size(); t++) {
     const auto& x = observations.at(t);
 
-    auto w = log_sum_exp<K>(observation_prob.at(t), sequence_probs.at(t));
+    auto w =
+        log_sum_exp<Vector<K>>(observation_prob.at(t), sequence_probs.at(t));
     w /= w.sum();
 
     Matrix<K, M> gamma(K, M);
@@ -409,8 +410,8 @@ HiddenMarkovModel<K, M, D>::get_state_sequence() {
   psi.reserve(observations.size());
 
   // Initial state.
-  delta.push_back(
-      log_sum_exp<K>(observation_prob.front(), emission_vectors.front()));
+  delta.push_back(log_sum_exp<Vector<K>>(observation_prob.front(),
+                                         emission_vectors.front()));
   psi.push_back(0);
 
   // Compute the Viterbi Path; the most likely state sequence.
