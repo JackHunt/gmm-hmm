@@ -1,6 +1,6 @@
 #include "hmm.hpp"
 
-using namespace ContinuousHMM::HMM;
+using namespace ContinuousHMM;
 
 /*!
  * Continuous observation Hidden Markov Model.
@@ -398,7 +398,7 @@ void HiddenMarkovModel<K, M, D>::train(unsigned int epochs,
  */
 template <size_t K, size_t M, size_t D>
 std::pair<std::vector<size_t>, VectorList<K>>
-HiddenMarkovModel<K, M, D>::get_state_sequences() {
+HiddenMarkovModel<K, M, D>::get_state_sequence() {
   // State probabilities.
   VectorList<K> delta;
   delta.reserve(observations.size());
@@ -416,7 +416,7 @@ HiddenMarkovModel<K, M, D>::get_state_sequences() {
   for (size_t t = 1; t < observations.size(); t++) {
     const auto trans_prob = delta.at(t - 1).transpose() * state_transition_prob;
 
-    Vector<K>::Index max_idx;
+    typename Vector<K>::Index max_idx;
     delta.push_back(trans_prob.maxCoeff(&max_idx) * emission_vectors.at(t));
     psi.push_back(static_cast<size_t>(max_idx));
   }
@@ -425,6 +425,6 @@ HiddenMarkovModel<K, M, D>::get_state_sequences() {
   return {psi, delta};
 }
 
-namespace ContinuousHMM::HMM {
+namespace ContinuousHMM {
 template class HiddenMarkovModel<3, 4, 3>;
 }
