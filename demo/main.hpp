@@ -17,7 +17,7 @@ namespace HMMDemo {
 using Data::MotionData;
 using Data::Timestamp;
 
-using ContinuousHMM::HiddenMarkovModel;
+using HMM::ContinuousInputHMM;
 
 // Log-Likelihood difference threshold for temrination and max epochs.
 constexpr static double convergence_threshold = 1e-5;
@@ -115,7 +115,7 @@ inline std::pair<std::vector<size_t>, VectorList<K>> demo(
   initial_state_dist /= K;
 
   // Create and train the HMM.
-  HiddenMarkovModel<K, M, D> hmm(initial_state_dist, observations);
+  ContinuousInputHMM<K, M, D> hmm(initial_state_dist, observations);
   hmm.train(num_epochs, convergence_threshold);
 
   // Get the optimal state sequence.

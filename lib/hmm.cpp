@@ -1,6 +1,6 @@
 #include "hmm.hpp"
 
-using namespace ContinuousHMM;
+using namespace HMM;
 
 /*!
  * Continuous observation Hidden Markov Model.
@@ -11,7 +11,7 @@ using namespace ContinuousHMM;
  * \param M Number of GMM mixture components.
  */
 template <size_t K, size_t M, size_t D>
-HiddenMarkovModel<K, M, D>::HiddenMarkovModel(
+ContinuousInputHMM<K, M, D>::ContinuousInputHMM(
     const Vector<K>& initial_state_prob, const VectorList<D>& observations)
     : T(observations.size()),
       initial_state_prob(initial_state_prob),
@@ -45,7 +45,7 @@ HiddenMarkovModel<K, M, D>::HiddenMarkovModel(
  *
  */
 template <size_t K, size_t M, size_t D>
-void HiddenMarkovModel<K, M, D>::forward() {
+void ContinuousInputHMM<K, M, D>::forward() {
   for (size_t i = 1; i < observations.size(); i++) {
     // Update emission vector.
     emission_vectors.at(i) = get_emission_vector(observations.at(i));
@@ -73,7 +73,7 @@ void HiddenMarkovModel<K, M, D>::forward() {
  *
  */
 template <size_t K, size_t M, size_t D>
-void HiddenMarkovModel<K, M, D>::backward() {
+void ContinuousInputHMM<K, M, D>::backward() {
   for (int i = (observations.size() - 2); i >= 0; i--) {
     const auto p = log_sum_exp<Vector<K>>(emission_vectors.at(i + 1),
                                           sequence_probs.at(i + 1));
@@ -87,7 +87,7 @@ void HiddenMarkovModel<K, M, D>::backward() {
  *
  */
 template <size_t K, size_t M, size_t D>
-void HiddenMarkovModel<K, M, D>::update() {
+void ContinuousInputHMM<K, M, D>::update() {
   /*
    * E Step.
    */
@@ -145,7 +145,7 @@ void HiddenMarkovModel<K, M, D>::update() {
  * \return $P(x | \bm{\mu}, \bm{\Sigma})$ - note: P(.) denotes the GMM PDF.
  */
 template <size_t K, size_t M, size_t D>
-Vector<K> HiddenMarkovModel<K, M, D>::get_emission_vector(
+Vector<K> ContinuousInputHMM<K, M, D>::get_emission_vector(
     const Vector<D>& observation) const {
   Vector<K> p;
   for (size_t k = 0; k < K; k++) {
@@ -160,7 +160,7 @@ Vector<K> HiddenMarkovModel<K, M, D>::get_emission_vector(
  * \return Expectations over times $t$, $t+1$ etc
  */
 template <size_t K, size_t M, size_t D>
-MatrixList<K, K> HiddenMarkovModel<K, M, D>::compute_zetas() const {
+MatrixList<K, K> ContinuousInputHMM<K, M, D>::compute_zetas() const {
   // Normalizer.
   const auto Z = observation_prob.back().sum();
 
@@ -186,7 +186,7 @@ MatrixList<K, K> HiddenMarkovModel<K, M, D>::compute_zetas() const {
  * \return $\bm{\gamma}_{t} \forall t$.
  */
 template <size_t K, size_t M, size_t D>
-MatrixList<K, M> HiddenMarkovModel<K, M, D>::compute_gammas() const {
+MatrixList<K, M> ContinuousInputHMM<K, M, D>::compute_gammas() const {
   MatrixList<K, M> gammas;
   gammas.reserve(observations.size());
 
@@ -222,7 +222,7 @@ MatrixList<K, M> HiddenMarkovModel<K, M, D>::compute_gammas() const {
  */
 template <size_t K, size_t M, size_t D>
 std::vector<std::vector<double>>
-HiddenMarkovModel<K, M, D>::compute_mixture_coeffs(
+ContinuousInputHMM<K, M, D>::compute_mixture_coeffs(
     const MatrixList<K, M>& gammas) const {
   // Sum row for each state.
   VectorList<K> state_sums;
@@ -263,7 +263,7 @@ HiddenMarkovModel<K, M, D>::compute_mixture_coeffs(
  * $K$.
  */
 template <size_t K, size_t M, size_t D>
-NestedVectorList<D> HiddenMarkovModel<K, M, D>::compute_gmm_means(
+NestedVectorList<D> ContinuousInputHMM<K, M, D>::compute_gmm_means(
     const MatrixList<K, M>& gammas) const {
   // Output.
   NestedVectorList<D> updated_means(K, VectorList<D>(M, Vector<D>::Zero()));
@@ -302,7 +302,7 @@ NestedVectorList<D> HiddenMarkovModel<K, M, D>::compute_gmm_means(
  * \mathbb{R}^{D \times D}$ for each state $K$.
  */
 template <size_t K, size_t M, size_t D>
-NestedMatrixList<D, D> HiddenMarkovModel<K, M, D>::compute_gmm_covariances(
+NestedMatrixList<D, D> ContinuousInputHMM<K, M, D>::compute_gmm_covariances(
     const MatrixList<K, M>& gammas) const {
   // Output.
   NestedMatrixList<D, D> updated_covariances(
@@ -359,8 +359,8 @@ NestedMatrixList<D, D> HiddenMarkovModel<K, M, D>::compute_gmm_covariances(
  * \param convergence_threshold Training termination threshold.
  */
 template <size_t K, size_t M, size_t D>
-void HiddenMarkovModel<K, M, D>::train(unsigned int epochs,
-                                       double convergence_threshold) {
+void ContinuousInputHMM<K, M, D>::train(unsigned int epochs,
+                                        double convergence_threshold) {
   unsigned int epoch = 0;
   auto log_likelihood = std::numeric_limits<double>::min();
   auto prev_log_likelihood = log_likelihood;
@@ -400,7 +400,7 @@ void HiddenMarkovModel<K, M, D>::train(unsigned int epochs,
  */
 template <size_t K, size_t M, size_t D>
 std::pair<std::vector<size_t>, VectorList<K>>
-HiddenMarkovModel<K, M, D>::get_state_sequence() {
+ContinuousInputHMM<K, M, D>::get_state_sequence() {
   // State probabilities.
   VectorList<K> delta;
   delta.reserve(observations.size());
@@ -427,6 +427,6 @@ HiddenMarkovModel<K, M, D>::get_state_sequence() {
   return {psi, delta};
 }
 
-namespace ContinuousHMM {
-template class HiddenMarkovModel<3, 4, 3>;
+namespace HMM {
+template class ContinuousInputHMM<3, 4, 3>;
 }

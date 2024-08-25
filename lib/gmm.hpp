@@ -12,7 +12,7 @@
 #include "aliases.hpp"
 #include "mvn.hpp"
 
-namespace ContinuousHMM::GMM {
+namespace HMM::GMM {
 
 template <size_t D>
 using Normal = ProbUtils::MultivariateNormal<D>;
@@ -47,6 +47,6 @@ class GaussianMixtureModel final {
   constexpr size_t get_data_dimension() const;
 };
 
-}  // namespace ContinuousHMM::GMM
+}  // namespace HMM::GMM
 
 #endif

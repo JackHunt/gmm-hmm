@@ -1,6 +1,6 @@
 #include "gmm.hpp"
 
-using namespace ContinuousHMM::GMM;
+using namespace HMM::GMM;
 
 /*!
  * Gaussian Mixture Model.
@@ -200,6 +200,6 @@ constexpr size_t GaussianMixtureModel<D, M>::get_data_dimension() const {
   return D;
 }
 
-namespace ContinuousHMM::GMM {
+namespace HMM::GMM {
 template class GaussianMixtureModel<3, 4>;
 }

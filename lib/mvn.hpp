@@ -3,7 +3,7 @@
 
 #include "aliases.hpp"
 
-namespace ContinuousHMM::ProbUtils {
+namespace HMM::ProbUtils {
 
 /*!
  * This class implements a simple Multivariate Normal (Gaussian) Distribution.
@@ -27,6 +27,6 @@ class MultivariateNormal final {
   void set_sigma(const Matrix<D, D>& sigma);
 };
 
-}  // namespace ContinuousHMM::ProbUtils
+}  // namespace HMM::ProbUtils
 
 #endif

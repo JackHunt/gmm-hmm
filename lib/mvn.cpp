@@ -1,6 +1,6 @@
 #include "mvn.hpp"
 
-using namespace ContinuousHMM::ProbUtils;
+using namespace HMM::ProbUtils;
 
 /*!
  *
@@ -78,6 +78,6 @@ void MultivariateNormal<D>::set_sigma(const Matrix<D, D>& sigma) {
   this->sigma = sigma;
 }
 
-namespace ContinuousHMM::ProbUtils {
+namespace HMM::ProbUtils {
 template class MultivariateNormal<3>;
 }

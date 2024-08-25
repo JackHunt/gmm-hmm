@@ -12,7 +12,7 @@
 #include "aliases.hpp"
 #include "gmm.hpp"
 
-namespace ContinuousHMM {
+namespace HMM {
 
 using GMM::GaussianMixtureModel;
 
@@ -53,7 +53,7 @@ Matrix<M, K> log_sum_exp_matmul(const Matrix<M, N>& A, const Matrix<N, K>& B) {
  *
  */
 template <size_t K, size_t M, size_t D>
-class HiddenMarkovModel final {
+class ContinuousInputHMM final {
  protected:
   // Number of observations (discrete times).
   const size_t T;
@@ -100,14 +100,14 @@ class HiddenMarkovModel final {
       const MatrixList<K, M>& gammas) const;
 
  public:
-  HiddenMarkovModel(const Vector<K>& initial_state_prob,
-                    const VectorList<D>& observations);
+  ContinuousInputHMM(const Vector<K>& initial_state_prob,
+                     const VectorList<D>& observations);
 
   void train(unsigned int epochs, double convergence_threshold);
 
   std::pair<std::vector<size_t>, VectorList<K>> get_state_sequence();
 };
 
-}  // namespace ContinuousHMM
+}  // namespace HMM
 
 #endif
