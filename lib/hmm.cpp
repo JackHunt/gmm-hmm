@@ -51,8 +51,8 @@ void HiddenMarkovModel<K, M, D>::forward() {
     emission_vectors.at(i) = get_emission_vector(observations.at(i));
 
     // Compute alpha.
-    const auto p =
-        state_transition_prob.transpose() * observation_prob.at(i - 1);
+    const auto p = log_sum_exp_matmul<K, K, 1>(
+        state_transition_prob.transpose(), observation_prob.at(i - 1));
     const auto alpha = log_sum_exp<Vector<K>>(p, emission_vectors.at(i));
 
     // Compute scale factor.

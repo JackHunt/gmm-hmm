@@ -24,6 +24,26 @@ T log_sum_exp(const T& a, const T& b) {
   return log_sum.matrix();
 }
 
+template <size_t M, size_t N, size_t K>
+Matrix<M, K> log_sum_exp_matmul(const Matrix<M, N>& A, const Matrix<N, K>& B) {
+  const auto log_A = A.array().log();
+  const auto log_B = B.array().log();
+
+  Matrix<M, K> log_C(A.rows(), B.cols());
+
+  for (int j = 0; j < B.cols(); ++j) {
+    auto tmp = log_A.rowwise() + log_B.col(j).transpose();
+    log_C.col(j) = tmp.rowwise().maxCoeff().array() +
+                   (tmp.array().colwise() - tmp.rowwise().maxCoeff().array())
+                       .exp()
+                       .rowwise()
+                       .sum()
+                       .log();
+  }
+
+  return log_C.array().exp();
+}
+
 /*!
  * This class implements a Hidden Markov Model with continuous
  * observations modelled by an $M$ dimensional Gaussian Mixture Model.
