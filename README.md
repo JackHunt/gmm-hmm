@@ -1,2 +1,2 @@
 # gmm-hmm
-GMM with HMM.
+Continous observation HMM (via GMM).
